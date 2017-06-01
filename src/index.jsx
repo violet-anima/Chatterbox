@@ -1,6 +1,6 @@
 // Application entrypoint.
 
-// Load up the application styles
+// Load up the application
 require("../styles/application.scss");
 
 // Render the top-level React component

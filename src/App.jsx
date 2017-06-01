@@ -5,7 +5,6 @@ import index from './index.jsx';
 let getLocation = require('./getLocation').getLocation;
 let getURL = require('./getURL').getURL;
 
-
 class App extends Component {
 
   constructor (props) {
@@ -127,5 +126,3 @@ class App extends Component {
   }
 }
 export default App;
-
-//https://en.wikipedia.org/wiki/File:June_odd-eyed-cat.jpg
