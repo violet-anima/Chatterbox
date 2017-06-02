@@ -115,11 +115,8 @@ class App extends Component {
       </div>
     )
   }
-}//----end of componenet----\\
-
-
-
-/* adding colour set random colour in props then send over send back and assign*/
+}
+// Component Ends //
 
 
 export default App;
