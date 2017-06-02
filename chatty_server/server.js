@@ -7,6 +7,13 @@ const server = express()
   .use(express.static('public'))
   .listen(PORT, '0.0.0.0', 'localhost', () => console.log(`Listening on ${ PORT }`));
 
+const colourList = [
+  'orange',
+  'green',
+  'blue',
+  'magenta'
+];
+
 //----Create the WebSockets server----\\
 const wss = new SocketServer({server});
 let nextSocketId = 0;
@@ -21,7 +28,7 @@ let nextSocketId = 0;
   };
 
 //----Establishing connection----\\
-wss.on('connection', (ws) => {
+wss.on('connection', (client) => {
   console.log('Client connected');
 
 //----UsersOnline Info----\\
@@ -33,21 +40,26 @@ wss.on('connection', (ws) => {
   }
   wss.broadcast(JSON.stringify(userLoggedIn));
 
+  const colourPayload = {type: 'colourAssignment', colour: colourList[nextSocketId % 4] }
+  client.send(JSON.stringify(colourPayload));
+
 //----Incoming message data && Sending----\\
-  ws.on('message', (data) => {
+  client.on('message', (data) => {
     inMessage = JSON.parse(data);
     switch(inMessage.type) {
       case "postMessage":
         inMessage = {
           uniqueKey: uuidV1(),
-          username: inMessage.username,
+          user: inMessage.user,
           content: inMessage.content,
           type: "incomingMessage"
         };
+        console.log(`User ${inMessage.user.name} said ${inMessage.content}`);
       break;
       case "postNotification":
         inMessage = {
           uniqueKey: uuidV1(),
+          user: inMessage.user,
           notification: inMessage.notification,
           type: "incomingNotification"
         };
@@ -59,7 +71,7 @@ wss.on('connection', (ws) => {
   });
 
 //----Client Socket ID deleted when user disconnects----\\
-  ws.on('close', () => {
+  client.on('close', () => {
     nextSocketId -= 1;
     let userLoggedOut = {
       type: "onlineUsers",

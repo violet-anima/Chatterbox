@@ -1,22 +1,22 @@
 import React, {Component} from 'react';
 import MessageList from './MessageList.jsx';
 import ChatBar from './ChatBar.jsx';
+
+import User from './Models/User.js';
+import Message from './Models/Message.js';
+import Notification from './Models/Notification.js';
+
 const uuidV1 = require('uuid/v1');
 
 class App extends Component {
 
-//----Settings states currentUser and messages----\\
+  //----Settings states currentUser and messages----\\
   constructor(props) {
     super(props);
 
     this.state = {
-      currentUser: { name: "Bob" },
-      messages: [
-        {user: {name: "Bob"}, content: "Hi!"},
-        {user: {name: "Judy"}, content: "Hey!"},
-        {user: {name: "Bob"}, content: "Test"},
-        {user: {name: "Judy"}, content: "Boom!"}
-      ],
+      currentUser: new User("Anonymous"),
+      messages: [],
       onlineUserCount: 0
     };
 
@@ -24,72 +24,80 @@ class App extends Component {
     this.changeUser = this.changeUser.bind(this);
   };
 
-//----Establishing socket connection----\\
+  //----Establishing socket connection----\\
   componentDidMount() {
     this.socket = new WebSocket('ws://localhost:3001');
     this.socket.onopen = () => {
       console.log('Great Success. Connection established.');
     };
 
-
-//----Handles incoming messages----\\
+    //----Handles incoming messages----\\
     this.socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
-
+      console.log(data.type);
       switch(data.type) {
         case "incomingMessage":
-          const messages = this.state.messages.concat(data);
-          this.setState({ messages });
+          const incomingMessage = new Message(
+            data.user,
+            data.content,
+            data.uniqueKey
+          );
+          this.setState({ messages: this.state.messages.concat(incomingMessage) });
         break;
         case "incomingNotification":
-          const notification = this.state.messages.concat(data);
-          this.setState({ messages: notification });
+          const incomingNotification = new Notification(
+            data.user,
+            data.notification,
+            data.uniqueKey
+          );
+          this.setState({ messages: this.state.messages.concat(incomingNotification) });
         break;
         case "onlineUsers":
           this.setState({ onlineUserCount: parseInt(data.value) });
+          break;
+        case "colourAssignment":
+          this.setState({ currentUser: this.state.currentUser.withNewColour(data.colour) });
           break;
         default:
         throw new Error(`Unknown event type ${data.type}`);
       }
     }
-  }; //----end of Socket connection----\\
+  };
+  //----end of Socket connection----\\
 
-
-
-
-
-//----Event listener for chat bar; sends data to server----\\
+  //----Event listener for chat bar; sends data to server----\\
   addChatMessage(event) {
-    const timeStamp = uuidV1();
-    if(event.key === 'Enter') {
+    if (event.key === 'Enter') {
       const newChatMessage = {
-          key: timeStamp,
-          name: this.state.currentUser.name,
-          content: event.target.value,
-          type: "postMessage"
-        }
+        key: uuidV1(),
+        user: this.state.currentUser,
+        content: event.target.value,
+        type: "postMessage"
+      }
       this.socket.send(JSON.stringify(newChatMessage));
       event.target.value = "";
     }
   };
 
-
-//----Function to handle Username Change----\\
+  //----Function to handle Username Change----\\
   changeUser(event) {
-      const timeStamp = Date.now();
-      this.setState({ currentUser: { name: event.target.value }});
-      const newUserName = {
-        type: "postNotification",
-        name: event.target.value,
-        notification: `${this.state.currentUser.name} has changed their name to ${event.target.value}.`,
-        key: timeStamp
-        }
-      this.socket.send(JSON.stringify(newUserName));
+    const timeStamp = Date.now();
+    const updatedUser = this.state.currentUser.withNewName(event.target.value);
+    this.setState({
+      currentUser: updatedUser
+    });
+    const newUserName = {
+      type: "postNotification",
+      user: updatedUser,
+      notification: `${this.state.currentUser.name} has changed their name to ${updatedUser.name}.`,
+      key: timeStamp
+    }
+    this.socket.send(JSON.stringify(newUserName));
   }
 
 //----Rendering HTML----\\
   render() {
-    console.log('App render');
+    //console.log('App render');
     return (
       <div>
         <nav className="navbar">
