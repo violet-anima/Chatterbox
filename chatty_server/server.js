@@ -54,7 +54,6 @@ wss.on('connection', (client) => {
           content: inMessage.content,
           type: "incomingMessage"
         };
-        console.log(`User ${inMessage.user.name} said ${inMessage.content}`);
       break;
       case "postNotification":
         inMessage = {
