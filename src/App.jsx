@@ -28,7 +28,7 @@ class App extends Component {
   componentDidMount() {
     this.socket = new WebSocket('ws://localhost:3001');
     this.socket.onopen = () => {
-      console.log('Great Success. Connection established.');
+      console.log('Connection established.  Awesomeness awaits.');
     };
 
     //----Handles incoming messages----\\
@@ -95,9 +95,8 @@ class App extends Component {
     this.socket.send(JSON.stringify(newUserName));
   }
 
-//----Rendering HTML----\\
+  //----Rendering HTML----\\
   render() {
-    //console.log('App render');
     return (
       <div>
         <nav className="navbar">

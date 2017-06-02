@@ -14,11 +14,11 @@ const colourList = [
   'magenta'
 ];
 
-//----Create the WebSockets server----\\
+// WebSockets server is Created //
 const wss = new SocketServer({server});
 let nextSocketId = 0;
 
-//----Broadcasting messages back to Client----\\
+// Messages Broadcast to Client //
   wss.broadcast = function broadcast(data) {
     wss.clients.forEach((client) => {
       if (client.readyState === WebSocket.OPEN) {
@@ -27,11 +27,11 @@ let nextSocketId = 0;
     });
   };
 
-//----Establishing connection----\\
+// Connection is Established //
 wss.on('connection', (client) => {
   console.log('Client connected');
 
-//----UsersOnline Info----\\
+  // Online Users and User Color //
   const socketId = nextSocketId;
   nextSocketId += 1;
   let userLoggedIn = {
@@ -43,7 +43,7 @@ wss.on('connection', (client) => {
   const colourPayload = {type: 'colourAssignment', colour: colourList[nextSocketId % 4] }
   client.send(JSON.stringify(colourPayload));
 
-//----Incoming message data && Sending----\\
+  // Incoming Message Data and Sending //
   client.on('message', (data) => {
     inMessage = JSON.parse(data);
     switch(inMessage.type) {
@@ -66,11 +66,11 @@ wss.on('connection', (client) => {
       break;
       default:
       throw new Error(`Unknown event type ${inMessage.type}`);
-    };//end of switch statement\\
+    };
       wss.broadcast(JSON.stringify(inMessage));
   });
 
-//----Client Socket ID deleted when user disconnects----\\
+// Client Socket ID Deleted when User Disconnects //
   client.on('close', () => {
     nextSocketId -= 1;
     let userLoggedOut = {
@@ -78,7 +78,7 @@ wss.on('connection', (client) => {
       value: nextSocketId
     }
     wss.broadcast(JSON.stringify(userLoggedOut));
-    console.log('Client disconnected');
+    console.log('Client has disconnected');
   });
 
-}); //----end of connection connection----\\
+}); // Connection Ends Here //

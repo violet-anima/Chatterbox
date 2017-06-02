@@ -3,7 +3,6 @@ import React from'react';
 class ChatBar extends React.Component {
 
   render() {
-    console.log('ChatBar render');
     return (
       <footer className="chatbar">
         <input
@@ -11,8 +10,13 @@ class ChatBar extends React.Component {
           onBlur={this.props.changeUser}
           placeholder="Username"
           defaultValue={this.props.user.name}
+          style={{color: this.props.user.colour}}
         />
-        <input className="chatbar-message" onKeyPress={this.props.addChatMessage} placeholder="Message" />
+        <input
+          className="chatbar-message"
+          onKeyPress={this.props.addChatMessage}
+          placeholder="Message"
+        />
       </footer>
     );
   }

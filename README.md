@@ -1,4 +1,4 @@
-
+## Welcome to Chatterbox ##
 
 Chatterbox is a messaging app where users chat in real time.  Users can see who is online and also see when a user changes their name. This project is an exercise in implementing WebSockets and understanding the idea of the 'Virtual DOM.'
 
