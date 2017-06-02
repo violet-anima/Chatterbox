@@ -1,128 +1,100 @@
 import React, {Component} from 'react';
+import MessageList from './MessageList.jsx';
 import ChatBar from './ChatBar.jsx';
-import Message from './Message.jsx';
-import index from './index.jsx';
-let getLocation = require('./getLocation').getLocation;
-let getURL = require('./getURL').getURL;
+const uuidV1 = require('uuid/v1');
 
 class App extends Component {
 
-  constructor (props) {
-    super(props);
-    this.state = {
-      enterMessage: function(e) {
-        if (e.key === 'Enter') {
-          this.socket.send(JSON.stringify(
-                { type: 'postMessage',
-                  username: this.state.currentUser.name,
-                  content: e.target.value,
-                  colour: window.colour
-                })
-          );
-        }
-      }.bind(this),
-
-      changeName: function(e) {
-        if (e.key === 'Enter') {
-          this.socket.send(JSON.stringify(
-            {"type": "postNotification",
-             "content": `${this.state.currentUser.name} has changed their name to ${e.target.value}.`
-            })
-          );
-          this.setState({currentUser: {name: e.target.value}});
-        }
-      }.bind(this),
-
-      currentUser: {name: "Bob"}, // optional. if currentUser is not defined, it means the user is Anonymous
-      messages: [],
-      notification: '',
-      clientCount: 0
-    };
-    getLocation = getLocation.bind(this);
-    getURL = getURL.bind(this);
-  }
-
+//----Establishing socket connection----\\
   componentDidMount() {
+    this.socket = new WebSocket('ws://localhost:3001');
+    this.socket.onopen = () => {
+      console.log('Great Success. Connection established.');
+    };
 
-    const socketServer = new WebSocket("ws://localhost:4000");
-    this.socket = socketServer;
-    console.log("componentDidMount <App />");
-
+//----Handles incoming messages----\\
     this.socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
-
       switch(data.type) {
-
-      case "incomingMessage":
-
-        let url = getURL(data.content);
-        let isImage = false;
-        if (url) {
-          let pathname = getLocation(url).pathname;
-          if (['png', 'jpg', 'gif', 'jpeg'].indexOf(pathname.split('.').pop()) > -1) {
-            isImage = true;
-            data.content = data.content.replace(url, '');
-          }
-        }
-
-        const newMessage = {username: data.username,
-                            content: data.content,
-                            colour: data.colour,
-                            img: isImage ? url : null};
-
-        const messages = this.state.messages.concat(newMessage);
-        this.setState({messages: messages});
+        case "incomingMessage":
+          const messages = this.state.messages.concat(data);
+          this.setState({ messages });
         break;
-
-      case "incomingNotification":
-        console.log('this in incoming notification', this);
-
-        console.log('data.content', data.content);
-        const notification = data.content;
-        this.setState({notification: data.content});
+        case "incomingNotification":
+          const notification = this.state.messages.concat(data);
+          this.setState({ messages: notification });
         break;
-
-      case "clientCount":
-
-        this.setState({clientCount: data.count})
-        break;
-
-      case "changeColour":
-        window.colour = data.colour;
-        // $("#" + data.).css({"background-color": data.color});
-        break
-
-      default:
-        // show an error in the console if the message type is unknown
-        throw new Error("Unknown event type " + data.type);
+        case "onlineUsers":
+          const user = this.state.user.concat(data.value);
+          this.setState({ value: user });
+          break;
+        default:
+        throw new Error(`Unknown event type ${data.type}`);
       }
-
     }
+  }; //----end of Socket connection----\\
 
+//----Settings states currentUser and messages----\\
+  constructor(props) {
+    super(props);
+    this.state = {
+      currentUser: { username: "Anonymous" },
+      messages: [],
+      user: []
+    };
+  this.addChatMessage = this.addChatMessage.bind(this);
+  this.changeUser = this.changeUser.bind(this);
+  };
 
+//----Event listener for chat bar; sends data to server----\\
+  addChatMessage = function(event) {
+    const timeStamp = uuidV1();
+    if(event.key === 'Enter') {
+      const newChatMessage = {
+          key: timeStamp,
+          username: this.state.currentUser.username,
+          content: event.target.value,
+          type: "postMessage"
+        }
+      this.socket.send(JSON.stringify(newChatMessage));
+      event.target.value = "";
+    }
+  };
+
+//----Function to handle Username Change----\\
+  changeUser = (event) => {
+      const timeStamp = Date.now();
+      this.setState({ currentUser: { username: event.target.value }});
+      const newUserName = {
+        type: "postNotification",
+        username: event.target.value,
+        notification: `${this.state.currentUser.username} has changed their name to ${event.target.value}.`,
+        key: timeStamp
+        }
+      this.socket.send(JSON.stringify(newUserName));
   }
-
+//----Rendering HTML----\\
   render() {
     return (
       <div>
         <nav className="navbar">
-          <a href="/" className="navbar-brand">Chatty</a>
-          <span className="clientCount">
-            Active users: {this.state.clientCount}
-          </span>
+        <img className="logo" src="/logo.png" />
+         <a href="/" className="navbar-brand">Chatty Cathy</a>
+          <div className="online-users">
+            <p>{this.state.value} User(s) Online</p>
+          </div>
         </nav>
-
-        <div className="message system">
-          {this.state.notification}
-        </div>
-        <main className="messages">
-          <Message messages= {this.state.messages} />
-        </main>
-        <ChatBar currentUser ={this.state.currentUser}
-                 enterMessage ={this.state.enterMessage}
-                 changeName = {this.state.changeName} />
+        {this.state.messages.map((message) =>
+          <MessageList key={message.key} username={message.username} content={message.content} notification={message.notification} />
+        )}
+        <ChatBar addChatMessage={this.addChatMessage} changeUser={this.changeUser} />
       </div>
-    );
+    )
   }
-}
+}//----end of componenet----\\
+
+
+/* adding colour set random colour in props then send over send back and assign*/
+
+
 export default App;

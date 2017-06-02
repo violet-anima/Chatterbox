@@ -1,27 +1,16 @@
-import React, {Component} from 'react';
+import React from'react';
 
-class MessageList extends Component {
+class MessageList extends React.Component {
   render() {
     return (
-      <div>
-        {this.props.messages.map(message =>
-          <div key={this.props.messages.indexOf(message) + '-div'}>
-            <span  className="message-username"
-                   style={{'color': message.colour}}
-                   key={this.props.messages.indexOf(message) + 'uname'}>
-                   {message.username}
-            </span>
-            <span className="message-content"
-                  key={this.props.messages.indexOf(message) + 'content'}>
-                  {message.content}
-                  {message.img &&
-                  <img src={message.img} style={{'maxWidth': '60%'}}/>}
-            </span>
+      <main className="messages">
+          <span className="message-username">{this.props.username}</span>
+          <span className="message-content">{this.props.content}</span>
+          <div className="message system">
+            <span>{this.props.notification}</span>
           </div>
-        )}
-      </div>
+      </main>
     );
   }
 }
-
 export default MessageList;
