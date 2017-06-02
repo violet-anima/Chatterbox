@@ -10,7 +10,7 @@ const uuidV1 = require('uuid/v1');
 
 class App extends Component {
 
-  //----Settings states currentUser and messages----\\
+  // States for Current User and Messages //
   constructor(props) {
     super(props);
 
@@ -24,14 +24,14 @@ class App extends Component {
     this.changeUser = this.changeUser.bind(this);
   };
 
-  //----Establishing socket connection----\\
+  // Socket Connection Established //
   componentDidMount() {
     this.socket = new WebSocket('ws://localhost:3001');
     this.socket.onopen = () => {
       console.log('Connection established.  Awesomeness awaits.');
     };
 
-    //----Handles incoming messages----\\
+    // For Handling Incoming Messages //
     this.socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
       console.log(data.type);
@@ -63,9 +63,9 @@ class App extends Component {
       }
     }
   };
-  //----end of Socket connection----\\
+  // Socket Connection Ends //
 
-  //----Event listener for chat bar; sends data to server----\\
+  // Chat Bar Event Listener //
   addChatMessage(event) {
     if (event.key === 'Enter') {
       const newChatMessage = {
@@ -79,7 +79,7 @@ class App extends Component {
     }
   };
 
-  //----Function to handle Username Change----\\
+  // User Name Change //
   changeUser(event) {
     const timeStamp = Date.now();
     const updatedUser = this.state.currentUser.withNewName(event.target.value);
@@ -95,7 +95,7 @@ class App extends Component {
     this.socket.send(JSON.stringify(newUserName));
   }
 
-  //----Rendering HTML----\\
+  // Renders HTML //
   render() {
     return (
       <div>
